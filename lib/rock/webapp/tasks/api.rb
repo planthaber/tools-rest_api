@@ -250,14 +250,19 @@ module Rock
                         end
                     end
 
-                    desc 'connect a port, /connect&to=taskname&port=portname, optional &type=buffer&size=10'
+                    desc 'connect a port, /connect&to=taskname&port=portname&host=hostname, optional &type=buffer&size=10'
                     params do
                         requires :to, :port
+                        optional :host
                         optional :type, type: String, default: "data"
                         optional :size, type: Integer, default: 10
                     end
                     get ':name_service/:name/ports/:port_name/connect', requirements: { name_service: ValidHostnameRegex } do
-                        target = port_by_task_and_name(*params.values_at('name_service', 'to', 'port'))
+                        hostname = params["name_service"]
+                        if params["host"]
+                            hostname = params["host"]
+                        end
+                        target = port_by_task_and_name(hostname, *params.values_at('to', 'port'))
                         source = port_by_task_and_name(*params.values_at('name_service', 'name', 'port_name'))                        
                         if request.params["type"] == "buffer"
                             source.connect_to target, :type => :buffer, :size => request.params["size"]
@@ -267,12 +272,17 @@ module Rock
 
                     end
 
-                    desc 'disconnect a port /disconnect&from=taskname&port=portname'
+                    desc 'disconnect a port /disconnect&from=taskname&port=portname&host=hostname'
                     params do
                         requires :from, :name
+                        optional :host
                     end
                     get ':name_service/:name/ports/:port_name/disconnect', requirements: { name_service: ValidHostnameRegex } do
-                        target = port_by_task_and_name(*params.values_at('name_service', 'from', 'port'))
+                        hostname = params["name_service"]
+                        if params["host"]
+                            hostname = params["host"]
+                        end
+                        target = port_by_task_and_name(hostname, *params.values_at('from', 'port'))
                         source = port_by_task_and_name(*params.values_at('name_service', 'name', 'port_name'))
                         source.disconnect_from target
                     end
