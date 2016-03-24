@@ -153,7 +153,7 @@ describe Rock::WebApp::Tasks do
                     port = task.create_output_port 'port', '/double'
                     get "/tasks/localhost/task/ports"
                     assert_equal 200, last_response.status
-                    assert_equal Hash[ports: [port.model.to_h]], MultiJson.load(last_response.body, symbolize_keys: true)
+                    assert_equal Hash[ports: ["state","port"]], MultiJson.load(last_response.body, symbolize_keys: true)
                 end
             end
         end
@@ -209,12 +209,12 @@ describe Rock::WebApp::Tasks do
                         end
                         Thin::Logging.level = Logger::WARN
                         @thin = Thin::Server.new('localhost', 9292, app)
-                        Orocos::WebApp.install_event_loop
+                        Rock::WebApp::Tasks.install_event_loop
                         @thin.start
                     end
 
                     after do
-                        Orocos::WebApp.remove_event_loop
+                        Rock::WebApp::Tasks.remove_event_loop
                         @thin.stop
                     end
 
@@ -228,14 +228,13 @@ describe Rock::WebApp::Tasks do
                             ws.on(:message) { |msg| d.succeed msg.data }
                             EM.add_periodic_timer(0.01) { port.write 0 }
                             EM.add_timer(2) { d.fail }
-                            assert_equal 0, MultiJson.load(sync(d))
+                            assert_equal [Hash[value: 0.0]], MultiJson.load(sync(d))
                         end
                     end
                 end
             end
         end
         describe "/write" do
-
             it "returns a code 415 'Unsupported Media Type' if the JSON string cannot be parsed" do
                 with_stub_task_context "task" do |task|
                     port = task.create_input_port 'port', '/double'
@@ -259,7 +258,7 @@ describe Rock::WebApp::Tasks do
                     assert_equal 406, last_response.status
                 end
             end
-                        
+
             it "returns a code 406 'Not Acceptable' if the type contents are wrong" do
                 with_stub_task_context "task" do |task|
                     port = task.create_input_port 'port', '/double'
@@ -267,7 +266,7 @@ describe Rock::WebApp::Tasks do
                     assert_equal 406, last_response.status
                 end
             end
-                        
+
             it "returns a code 403 'Forbidden' if the port type is wrong" do
                 with_stub_task_context "task" do |task|
                     port = task.create_output_port 'port', '/double'

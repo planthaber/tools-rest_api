@@ -84,11 +84,16 @@ module Rock
                     end
                     
                     def connected?
-                        if reader_or_writer.connected?
-                            return true
+                        if reader_or_writer.respond_to?(:connected)
+                            if reader_or_writer.connected?
+                                return true
+                            else
+                                @end_lifetime = Time.at(0) #start of epoch, definately tiimed out
+                                return false
+                            end
                         else
-                            @end_lifetime = Time.at(0) #start of epoch, definately tiimed out
-                            return false
+                            #ruby contexts have no working connected method, so just retrun true
+                            return true;
                         end
                     end
                     
