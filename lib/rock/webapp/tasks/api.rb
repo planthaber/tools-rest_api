@@ -1,5 +1,4 @@
 require 'rock/webapp/tasks/cached_ports'
-require 'grape_logging'
 
 module Rock
     module WebApp
@@ -8,9 +7,6 @@ module Rock
             class API < Grape::API
                 version 'v1', using: :header, vendor: :rock
                 format :json
-                
-                logger.formatter = GrapeLogging::Formatters::Json.new
-                use GrapeLogging::Middleware::RequestLogger, {logger: logger}
 
                 @ports = CachedPorts.new
 
