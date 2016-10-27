@@ -8,13 +8,10 @@ module Rock
             class API < Grape::API
                 version 'v1', using: :header, vendor: :rock
                 format :json
-
-                if ENV["REST_API_LOG_CONSOLE"]
-                    puts "logging"
-                    logger.formatter = GrapeLogging::Formatters::Json.new
-                    use GrapeLogging::Middleware::RequestLogger, {logger: logger}
-                end
                 
+                logger.formatter = GrapeLogging::Formatters::Json.new
+                use GrapeLogging::Middleware::RequestLogger, {logger: logger}
+
                 @ports = CachedPorts.new
 
                 def self.ports
